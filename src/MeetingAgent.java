@@ -29,6 +29,7 @@ public class MeetingAgent extends Agent {
     protected void setup() {
         System.out.println(getLocalName() + " is active");
 
+
         cityMap = new CityMap();
         cityMap.initializeMap();
 
@@ -37,6 +38,7 @@ public class MeetingAgent extends Agent {
 
         // Set the agent's location
         setLocation();
+        System.out.println(getLocalName() + " location is " + location);
 
         // Calculate shortest paths from the location
         myDistances = cityMap.shortestPathsFrom(location);
@@ -44,6 +46,7 @@ public class MeetingAgent extends Agent {
         // Add behaviors
         addBehaviour(new SendDistancesBehaviour(this, 2000));
         addBehaviour(new ListenBehaviour());
+        System.out.println();
     }
 
     private void setLocation() {
@@ -97,6 +100,7 @@ public class MeetingAgent extends Agent {
             ACLMessage msg = receive();
             if (msg != null) {
                 String content = msg.getContent();
+
                 System.out.println(getLocalName() + " received: " + content);
 
                 String sender = msg.getSender().getLocalName();
