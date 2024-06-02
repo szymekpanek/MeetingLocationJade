@@ -2,6 +2,8 @@ package jadelab2;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Set;
 
 public class CityMap {
     private Map<String, Map<String, Integer>> cityMap;
@@ -23,5 +25,29 @@ public class CityMap {
     public Map<String, Map<String, Integer>> getCityMap() {
         return cityMap;
     }
-}
 
+    public Map<String, Integer> shortestPathsFrom(String start) {
+        Map<String, Integer> distances = new HashMap<>();
+        PriorityQueue<Map.Entry<String, Integer>> queue = new PriorityQueue<>(Map.Entry.comparingByValue());
+
+        cityMap.keySet().forEach(v -> distances.put(v, Integer.MAX_VALUE));
+        distances.put(start, 0);
+        queue.add(Map.entry(start, 0));
+
+        while (!queue.isEmpty()) {
+            Map.Entry<String, Integer> current = queue.poll();
+            String currentPoint = current.getKey();
+            Integer currentDistance = current.getValue();
+
+            cityMap.get(currentPoint).forEach((neighbor, weight) -> {
+                int newDist = currentDistance + weight;
+                if (newDist < distances.get(neighbor)) {
+                    distances.put(neighbor, newDist);
+                    queue.add(Map.entry(neighbor, newDist));
+                }
+            });
+        }
+
+        return distances;
+    }
+}
