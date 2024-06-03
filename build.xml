@@ -28,7 +28,7 @@
         <pathelement path="build"/>
       </classpath>
       <arg value="-gui" />
-      <arg value="AGENT1:jadelab2.MeetingAgent;AGENT2:jadelab2.MeetingAgent" />
+      <arg value="AGENT1:jadelab2.MeetingAgent;AGENT2:jadelab2.MeetingAgent;AGENT3:jadelab2.MeetingAgent" />
     </java>
   </target>
 </project>

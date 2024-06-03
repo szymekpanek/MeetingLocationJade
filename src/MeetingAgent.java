@@ -1,6 +1,5 @@
 package jadelab2;
 
-import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
@@ -13,7 +12,6 @@ import jade.lang.acl.ACLMessage;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 public class MeetingAgent extends Agent {
     private static final String[] points = {"P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8"};
@@ -23,7 +21,7 @@ public class MeetingAgent extends Agent {
     private Map<String, Integer> myDistances;
     private Map<String, Map<String, Integer>> receivedDistances = new HashMap<>();
     private Map<String, Integer> proposedMeetingPoints = new HashMap<>();
-    private Set<AID> agents;
+    public int numAgents;
 
     @Override
     protected void setup() {
@@ -40,6 +38,9 @@ public class MeetingAgent extends Agent {
         setLocation();
         System.out.println(getLocalName() + " location is " + location);
 
+        // Get the number of active Agents added to JADE
+        getNumberOfAgents();
+
         // Calculate shortest paths from the location
         myDistances = cityMap.shortestPathsFrom(location);
 
@@ -51,6 +52,19 @@ public class MeetingAgent extends Agent {
 
     private void setLocation() {
         location = points[random.nextInt(points.length)];
+    }
+
+    private void getNumberOfAgents() {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("meeting-location"); // po tym szuka zarejestrowanych na meeting-location agentow
+        template.addServices(sd);
+        try {
+            DFAgentDescription[] results = DFService.search(this, template);
+            numAgents = results.length;
+        } catch (FIPAException fe) {
+            fe.printStackTrace();
+        }
     }
 
     private void registerAgent() {
@@ -110,7 +124,7 @@ public class MeetingAgent extends Agent {
                         receivedDistances.put(sender, parseContent(content));
                     }
 
-                    if (receivedDistances.size() == 2) {  // assuming it's a map for two agents demo
+                    if (receivedDistances.size() == numAgents) {  // Check if sum of received distances are equal to number of agents
                         String proposedMeetingPoint = determineMeetingPoint();
                         System.out.println(getLocalName() + " proposed meeting point: " + proposedMeetingPoint);
 
@@ -134,7 +148,7 @@ public class MeetingAgent extends Agent {
                     String proposedPoint = content.split(":")[1];
                     proposedMeetingPoints.merge(proposedPoint, 1, Integer::sum);
 
-                    if (proposedMeetingPoints.size() == 2) {  // assuming it's a map for two agents demo
+                    if (proposedMeetingPoints.size() == numAgents) {  // Check if sum of received distances are equal to number of agents
                         String meetingPoint = agreeOnMeetingPoint();
                         System.out.println(getLocalName() + " determined final meeting point: " + meetingPoint);
                         myAgent.doDelete();
