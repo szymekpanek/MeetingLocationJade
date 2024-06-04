@@ -19,15 +19,13 @@ public class MeetingAgent extends Agent {
     private String location;
     private CityMap cityMap;
     private Map<String, Integer> myDistances;
-    private Map<String, Map<String, Integer>> receivedDistances = new HashMap<>();
-    private Map<String, Integer> proposedMeetingPoints = new HashMap<>();
-    public int numAgents;
+    private final Map<String, Map<String, Integer>> receivedDistances = new HashMap<>();
+    private final Map<String, Integer> proposedMeetingPoints = new HashMap<>();
+    private int numAgents;
 
     @Override
     protected void setup() {
         System.out.println(getLocalName() + " is active");
-
-
         cityMap = new CityMap();
         cityMap.initializeMap();
 
@@ -41,12 +39,13 @@ public class MeetingAgent extends Agent {
         // Get the number of active Agents added to JADE
         getNumberOfAgents();
 
-        // Calculate shortest paths from the location
+        // Calculate the shortest paths from the location
         myDistances = cityMap.shortestPathsFrom(location);
 
         // Add behaviors
         addBehaviour(new SendDistancesBehaviour(this, 2000));
         addBehaviour(new ListenBehaviour());
+
         System.out.println();
     }
 
@@ -57,7 +56,7 @@ public class MeetingAgent extends Agent {
     private void getNumberOfAgents() {
         DFAgentDescription template = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("meeting-location"); // po tym szuka zarejestrowanych na meeting-location agentow
+        sd.setType("meeting-location");
         template.addServices(sd);
         try {
             DFAgentDescription[] results = DFService.search(this, template);
@@ -90,12 +89,10 @@ public class MeetingAgent extends Agent {
         protected void onTick() {
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
             msg.setContent(myDistances.toString());
-
             DFAgentDescription template = new DFAgentDescription();
             ServiceDescription sd = new ServiceDescription();
             sd.setType("meeting-location");
             template.addServices(sd);
-
             try {
                 DFAgentDescription[] result = DFService.search(myAgent, template);
                 for (int i = 0; i < result.length; ++i) {
@@ -114,20 +111,16 @@ public class MeetingAgent extends Agent {
             ACLMessage msg = receive();
             if (msg != null) {
                 String content = msg.getContent();
-
                 System.out.println(getLocalName() + " received: " + content);
-
                 String sender = msg.getSender().getLocalName();
                 if (content.startsWith("{")) {
                     // Parsing distances map
                     if (!receivedDistances.containsKey(sender)) {
                         receivedDistances.put(sender, parseContent(content));
                     }
-
-                    if (receivedDistances.size() == numAgents) {  // Check if sum of received distances are equal to number of agents
+                    if (receivedDistances.size() == numAgents) {
                         String proposedMeetingPoint = determineMeetingPoint();
                         System.out.println(getLocalName() + " proposed meeting point: " + proposedMeetingPoint);
-
                         ACLMessage proposalMsg = new ACLMessage(ACLMessage.INFORM);
                         proposalMsg.setContent("PROPOSED_POINT:" + proposedMeetingPoint);
                         DFAgentDescription template = new DFAgentDescription();
@@ -147,8 +140,8 @@ public class MeetingAgent extends Agent {
                 } else if (content.startsWith("PROPOSED_POINT:")) {
                     String proposedPoint = content.split(":")[1];
                     proposedMeetingPoints.merge(proposedPoint, 1, Integer::sum);
-
-                    if (proposedMeetingPoints.size() == numAgents) {  // Check if sum of received distances are equal to number of agents
+                    if (proposedMeetingPoints.values().stream().mapToInt(Integer::intValue).sum() == numAgents) {
+                        // Are sum of proposed meeting = number of agents
                         String meetingPoint = agreeOnMeetingPoint();
                         System.out.println(getLocalName() + " determined final meeting point: " + meetingPoint);
                         myAgent.doDelete();
@@ -161,7 +154,7 @@ public class MeetingAgent extends Agent {
 
         private Map<String, Integer> parseContent(String content) {
             Map<String, Integer> distances = new HashMap<>();
-            content = content.substring(1, content.length() - 1);  // Removing curly braces
+            content = content.substring(1, content.length() - 1); // Removing curly braces
             String[] entries = content.split(", ");
             for (String entry : entries) {
                 String[] keyValue = entry.split("=");
@@ -177,7 +170,6 @@ public class MeetingAgent extends Agent {
         receivedDistances.values().forEach(map -> {
             map.forEach((k, v) -> combinedDistances.merge(k, v, Integer::sum));
         });
-
         myDistances.forEach((k, v) -> combinedDistances.merge(k, v, Integer::sum));
 
         // Calculate the average distance for each location
@@ -185,12 +177,19 @@ public class MeetingAgent extends Agent {
         combinedDistances.forEach((k, v) -> averageDistances.put(k, v.doubleValue() / (receivedDistances.size() + 1)));
 
         // Find the location with the minimum average distance
-        return averageDistances.entrySet().stream().filter(e -> !e.getKey().equals(location))
-                .min(Map.Entry.comparingByValue()).get().getKey();
+        // Dodano zabezpieczenie, że zgłoszone punkty nie mogą być punktem początkowym agenta
+        return averageDistances.entrySet().stream()
+                .filter(e -> !e.getKey().equals(location))
+                .min(Map.Entry.comparingByValue())
+                .get()
+                .getKey();
     }
 
     private String agreeOnMeetingPoint() {
-        return proposedMeetingPoints.entrySet().stream().max(Map.Entry.comparingByValue()).get().getKey();
+        return proposedMeetingPoints.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .get()
+                .getKey();
     }
 
     @Override
