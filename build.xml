@@ -1,6 +1,14 @@
 <project name="JadeLab2" default="run" basedir=".">
   <property name="src" location="src"/>
   <property name="build" location="build"/>
+  <property name="lib" location="lib"/>
+
+  <path id="classpath">
+    <pathelement path="${lib}/jade.jar"/>
+    <pathelement path="${lib}/json-20240303.jar"/>
+    <pathelement path="${lib}/jgrapht-core-1.5.1.jar"/>
+    <pathelement path="${lib}/jgrapht-io-1.5.1.jar"/> <!-- Add this line -->
+  </path>
 
   <target name="init">
     <mkdir dir="${build}"/>
@@ -10,7 +18,9 @@
     <javac srcdir="${src}" destdir="${build}">
       <classpath>
         <pathelement path="jade/lib/jade.jar"/>
-        <pathelement path="jade/lib/json-20240303.jar"/> <!-- Add this line -->
+        <pathelement path="jade/lib/json-20240303.jar"/>
+        <pathelement path="${lib}/jgrapht-core-1.5.1.jar"/>
+        <pathelement path="${lib}/jgrapht-io-1.5.1.jar"/> <!-- Add this line -->
       </classpath>
     </javac>
   </target>
@@ -24,7 +34,9 @@
     <java fork="true" classpath="jade/lib/jade.jar;build" classname="jade.Boot">
       <classpath>
         <pathelement path="jade/lib/jade.jar"/>
-        <pathelement path="jade/lib/json-20240303.jar"/> <!-- Add this line -->
+        <pathelement path="jade/lib/json-20240303.jar"/>
+        <pathelement path="${lib}/jgrapht-core-1.5.1.jar"/>
+        <pathelement path="${lib}/jgrapht-io-1.5.1.jar"/> <!-- Add this line -->
         <pathelement path="build"/>
       </classpath>
       <arg value="-gui" />
