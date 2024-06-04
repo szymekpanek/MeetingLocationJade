@@ -6,8 +6,8 @@
   <path id="classpath">
     <pathelement path="${lib}/jade.jar"/>
     <pathelement path="${lib}/json-20240303.jar"/>
-    <pathelement path="${lib}/jgrapht-core-1.5.1.jar"/>
-    <pathelement path="${lib}/jgrapht-io-1.5.1.jar"/> <!-- Add this line -->
+    <pathelement path="${lib}/jgrapht-core-1.5.2.jar"/>
+    <pathelement path="${lib}/jgrapht-io-1.5.2.jar"/> <!-- Add this line -->
   </path>
 
   <target name="init">
@@ -19,8 +19,8 @@
       <classpath>
         <pathelement path="jade/lib/jade.jar"/>
         <pathelement path="jade/lib/json-20240303.jar"/>
-        <pathelement path="${lib}/jgrapht-core-1.5.1.jar"/>
-        <pathelement path="${lib}/jgrapht-io-1.5.1.jar"/> <!-- Add this line -->
+        <pathelement path="${lib}/jgrapht-core-1.5.2.jar"/>
+        <pathelement path="${lib}/jgrapht-io-1.5.2.jar"/> <!-- Add this line -->
       </classpath>
     </javac>
   </target>
@@ -35,8 +35,8 @@
       <classpath>
         <pathelement path="jade/lib/jade.jar"/>
         <pathelement path="jade/lib/json-20240303.jar"/>
-        <pathelement path="${lib}/jgrapht-core-1.5.1.jar"/>
-        <pathelement path="${lib}/jgrapht-io-1.5.1.jar"/> <!-- Add this line -->
+        <pathelement path="${lib}/jgrapht-core-1.5.2.jar"/>
+        <pathelement path="${lib}/jgrapht-io-1.5.2.jar"/> <!-- Add this line -->
         <pathelement path="build"/>
       </classpath>
       <arg value="-gui" />

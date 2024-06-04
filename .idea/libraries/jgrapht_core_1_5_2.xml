@@ -1,7 +1,7 @@
 <component name="libraryTable">
-  <library name="jgrapht-core-1.5.1">
+  <library name="jgrapht-core-1.5.2">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/jgrapht-core-1.5.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jgrapht-core-1.5.2.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
