@@ -19,6 +19,7 @@ public class CityMap {
         cityMap.put("P6", Map.of("P5", 6, "P7", 2));
         cityMap.put("P7", Map.of("P6", 2, "P8", 4));
         cityMap.put("P8", Map.of("P7", 4));
+        cityMap.put("P9", Map.of("P8", 4,"P1",1));
     }
 
     public Map<String, Map<String, Integer>> getCityMap() {

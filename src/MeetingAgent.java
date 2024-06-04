@@ -12,7 +12,6 @@ import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -20,7 +19,7 @@ import java.util.Random;
 import java.util.Set;
 
 public class MeetingAgent extends Agent {
-    private static final String[] points = {"P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8"};
+    private static final String[] points = {"P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8","P9"};
     private static final Random random = new Random();
     private String location;
     private CityMap cityMap;
@@ -29,6 +28,7 @@ public class MeetingAgent extends Agent {
     private final Map<String, Integer> proposedMeetingPoints = new HashMap<>();
     private static final Set<String> agentLocations = new HashSet<>();
     public int numAgents;
+    private static String finalMeetingPoint;
 
     @Override
     protected void setup() {
@@ -58,7 +58,9 @@ public class MeetingAgent extends Agent {
     }
 
     private void setLocation() {
-        location = points[random.nextInt(points.length)];
+        do {
+            location = points[random.nextInt(points.length)];
+        } while (agentLocations.contains(location));
     }
 
     private void getNumberOfAgents() {
@@ -89,42 +91,35 @@ public class MeetingAgent extends Agent {
     }
 
     private class SendDistancesBehaviour extends TickerBehaviour {
-        private boolean distancesSent = false;
-
         public SendDistancesBehaviour(Agent a, long period) {
             super(a, period);
         }
 
         @Override
         protected void onTick() {
-            if (!distancesSent) {
-                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                msg.setContent(myDistances.toString());
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+            msg.setContent(myDistances.toString());
 
-                DFAgentDescription template = new DFAgentDescription();
-                ServiceDescription sd = new ServiceDescription();
-                sd.setType("meeting-location");
-                template.addServices(sd);
-                try {
-                    DFAgentDescription[] result = DFService.search(myAgent, template);
-                    for (DFAgentDescription dfAgentDescription : result) {
-                        if (!dfAgentDescription.getName().equals(getAID())) {
-                            msg.addReceiver(dfAgentDescription.getName());
-                        }
+            msg.setSender(getAID());
+
+            DFAgentDescription template = new DFAgentDescription();
+            ServiceDescription sd = new ServiceDescription();
+            sd.setType("meeting-location");
+            template.addServices(sd);
+            try {
+                DFAgentDescription[] result = DFService.search(myAgent, template);
+                for (DFAgentDescription dfAgentDescription : result) {
+                    if (!dfAgentDescription.getName().equals(getAID())) {    // Avoid sending to self
+                        msg.addReceiver(dfAgentDescription.getName());
                     }
-                    send(msg);
-                    System.out.println(getLocalName() + " sent: " + msg.getContent());
-                    distancesSent = true; // Set the flag to true after sending the message
-                } catch (FIPAException fe) {
-                    fe.printStackTrace();
                 }
-            } else {
-                stop(); // Stop this behaviour once distances are sent
+                send(msg);
+                System.out.println(getLocalName() + " sent: " + msg.getContent());
+            } catch (FIPAException fe) {
+                fe.printStackTrace();
             }
         }
     }
-
-
 
     private class ListenBehaviour extends CyclicBehaviour {
         @Override
@@ -187,13 +182,27 @@ public class MeetingAgent extends Agent {
                             }
                             send(finalMsg);
                             System.out.println(getLocalName() + " sent: " + finalMsg.getContent());
-                        } catch (FIPAException fe) {
-                            fe.printStackTrace();
+
+                            // Generate and save the graph image
+                            Graph<String, DefaultEdge> graph = CityMapVisualizer.createGraphFromCityMap(cityMap.getCityMap());
+                            CityMapVisualizer.saveGraphAsImage(graph, "final_meeting_map.png", agentLocations, meetingPoint);
+
+                            finalMeetingPoint = meetingPoint;
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (FIPAException e) {
+                            throw new RuntimeException(e);
                         }
                     }
                 } else if (content.startsWith("FINAL_MEETING_POINT:")) {
                     String finalPoint = content.split(":")[1];
                     System.out.println(getLocalName() + " agreed on final meeting point: " + finalPoint);
+                    if (finalMeetingPoint == null) {
+                        finalMeetingPoint = finalPoint;
+                    } else if (!finalMeetingPoint.equals(finalPoint)) {
+                        System.out.println("Error: Inconsistent final meeting points detected!");
+                    }
                     myAgent.doDelete();
                 }
             } else {
@@ -213,7 +222,6 @@ public class MeetingAgent extends Agent {
         }
     }
 
-
     private String determineMeetingPoint() {
         // Combine all distance maps including this agent's own map
         Map<String, Integer> combinedDistances = new HashMap<>();
@@ -222,32 +230,22 @@ public class MeetingAgent extends Agent {
 
         // Calculate the average distance for each location
         Map<String, Double> averageDistances = new HashMap<>();
-        combinedDistances.forEach((k, v) -> averageDistances.put(k, v.doubleValue() / (receivedDistances.size() + 1)));
+        combinedDistances.forEach((k, v) -> {
+            if (!agentLocations.contains(k)) { // Exclude points that are initial locations of agents
+                averageDistances.put(k, v / (double) numAgents);
+            }
+        });
 
-        // Find the location with the minimum average distance
-        // Dodano zabezpieczenie, że zgłoszone punkty nie mogą być punktem początkowym agenta
         return averageDistances.entrySet().stream()
-                .filter(e -> !e.getKey().equals(location))
                 .min(Map.Entry.comparingByValue())
-                .get()
-                .getKey();
+                .map(Map.Entry::getKey)
+                .orElse(null);
     }
 
     private String agreeOnMeetingPoint() {
         return proposedMeetingPoints.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
-                .get()
-                .getKey();
-    }
-
-    @Override
-    protected void takeDown() {
-        // Deregister the agent
-        try {
-            DFService.deregister(this);
-        } catch (FIPAException fe) {
-            fe.printStackTrace();
-        }
-        System.out.println(getLocalName() + " terminating.");
+                .map(Map.Entry::getKey)
+                .orElse(null);
     }
 }
