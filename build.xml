@@ -4,10 +4,11 @@
   <property name="lib" location="lib"/>
 
   <path id="classpath">
-    <pathelement path="${lib}/jade.jar"/>
-    <pathelement path="${lib}/json-20240303.jar"/>
-    <pathelement path="${lib}/jgrapht-core-1.5.2.jar"/>
-    <pathelement path="${lib}/jgrapht-io-1.5.2.jar"/> <!-- Add this line -->
+    <pathelement path="jade/lib/jade.jar"/>
+    <pathelement path="jade/lib/json-20240303.jar"/>
+    <pathelement path="jade/lib/jgrapht-core-1.5.2.jar"/>
+    <pathelement path="jade/lib/jgrapht-io-1.5.2.jar"/>
+    <pathelement path="jade/lib/jgraphx-3.4.1.3.jar"/> <!-- Add this line -->
   </path>
 
   <target name="init">
@@ -15,12 +16,13 @@
   </target>
 
   <target name="compile" depends="init" description="compile the source" >
-    <javac srcdir="${src}" destdir="${build}">
+    <javac srcdir="${src}" destdir="${build}" includeantruntime="false">
       <classpath>
         <pathelement path="jade/lib/jade.jar"/>
         <pathelement path="jade/lib/json-20240303.jar"/>
-        <pathelement path="${lib}/jgrapht-core-1.5.2.jar"/>
-        <pathelement path="${lib}/jgrapht-io-1.5.2.jar"/> <!-- Add this line -->
+        <pathelement path="jade/lib/jgrapht-core-1.5.2.jar"/>
+        <pathelement path="jade/lib/jgrapht-io-1.5.2.jar"/>
+        <pathelement path="jade/lib/jgraphx-3.4.1.3.jar"/> <!-- Add this line -->
       </classpath>
     </javac>
   </target>
@@ -31,12 +33,13 @@
   </target>
 
   <target name="run" description="create agents" >
-    <java fork="true" classpath="jade/lib/jade.jar;build" classname="jade.Boot">
+    <java fork="true" classpath="/jade/lib/jade.jar;build" classname="jade.Boot">
       <classpath>
         <pathelement path="jade/lib/jade.jar"/>
         <pathelement path="jade/lib/json-20240303.jar"/>
-        <pathelement path="${lib}/jgrapht-core-1.5.2.jar"/>
-        <pathelement path="${lib}/jgrapht-io-1.5.2.jar"/> <!-- Add this line -->
+        <pathelement path="jade/lib/jgrapht-core-1.5.2.jar"/>
+        <pathelement path="jade/lib/jgrapht-io-1.5.2.jar"/>
+        <pathelement path="jade/lib/jgraphx-3.4.1.3.jar"/> <!-- Add this line -->
         <pathelement path="build"/>
       </classpath>
       <arg value="-gui" />
